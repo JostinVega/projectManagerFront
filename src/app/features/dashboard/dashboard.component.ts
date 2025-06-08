@@ -909,10 +909,7 @@ export class DashboardComponent implements OnInit {
       ).toPromise();
       
       if (tasksResponse) {
-        this.recentTasks = tasksResponse.map(task => ({
-          ...task,
-          priority: this.assignRandomPriority() // Temporal hasta que agregues priority a tu schema
-        }));
+        this.recentTasks = tasksResponse;
       }
     } catch (error) {
       console.error('Error loading recent tasks:', error);

@@ -8,6 +8,8 @@ import { environment } from '../../../../environments/environment';
 
 interface Task {
   _id: string;
+  id: string;
+  taskId: string;
   title: string;
   description?: string;
   status: 'pending' | 'in_progress' | 'completed';
@@ -207,9 +209,6 @@ interface TaskFilters {
                     <span class="material-icons">
                       {{ task.status === 'completed' ? 'undo' : 'check' }}
                     </span>
-                  </button>
-                  <button class="task-action-btn" [routerLink]="['/tasks', task._id, 'edit']" (click)="$event.stopPropagation()">
-                    <span class="material-icons">edit</span>
                   </button>
                 </div>
               </div>
@@ -770,12 +769,16 @@ export class TasksComponent implements OnInit {
 
   private async loadTasks() {
     try {
+      // CAMBIO: La URL ahora es limpia, sin '?populate' ni '?sort'
       const response = await this.http.get<Task[]>(
-        `${environment.apiUrl}/tasks?populate=project,assignedTo,createdBy&sort=-createdAt`
+        `${environment.apiUrl}/tasks`
       ).toPromise();
       
       if (response) {
-        this.tasks = response;
+        // CAMBIO: Ordenamos las tareas aquí, en el frontend, después de recibirlas
+        this.tasks = response.sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
       }
     } catch (error) {
       console.error('Error loading tasks:', error);
@@ -808,6 +811,8 @@ export class TasksComponent implements OnInit {
       
       const matchesStatus = !this.filters.status || task.status === this.filters.status;
       const matchesPriority = !this.filters.priority || task.priority === this.filters.priority;
+      
+      // CAMBIO: Comparamos directamente el string del ID del proyecto
       const matchesProject = !this.filters.project || task.project._id === this.filters.project;
       
       return matchesSearch && matchesStatus && matchesPriority && matchesProject;
@@ -878,8 +883,9 @@ export class TasksComponent implements OnInit {
     try {
       const newStatus = task.status === 'completed' ? 'pending' : 'completed';
       
-      await this.http.patch(
-        `${environment.apiUrl}/tasks/${task._id}`,
+      // CAMBIO: Usamos el método 'put' y el identificador 'task.taskId'
+      await this.http.put(
+        `${environment.apiUrl}/tasks/${task.taskId}`,
         { status: newStatus }
       ).toPromise();
       

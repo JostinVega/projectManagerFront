@@ -152,9 +152,6 @@ interface ProjectMember {
                   </div>
                   
                   <div class="project-actions">
-                    <button class="action-btn" (click)="editProject(project, $event)">
-                      <span class="material-icons">edit</span>
-                    </button>
                     <button class="action-btn" (click)="deleteProject(project, $event)">
                       <span class="material-icons">delete</span>
                     </button>
@@ -748,15 +745,14 @@ export class ProjectsComponent implements OnInit {
         `${environment.apiUrl}/projects`
       ).toPromise();
       
-      if (response) {
-        this.projects = response.map(project => ({
-          ...project,
-          progress: this.calculateProjectProgress(project),
-          status: this.assignRandomStatus(),
-          priority: this.assignRandomPriority()
-        }));
-        this.filteredProjects = [...this.projects];
-      }
+        if (response) {
+          this.projects = response.map(project => ({
+            ...project,
+            // Dejamos que 'status' y 'priority' sean los que vienen del backend
+            progress: this.calculateProjectProgress(project) 
+          }));
+          this.filteredProjects = [...this.projects];
+        }
     } catch (error) {
       console.error('Error loading projects:', error);
     } finally {
@@ -847,20 +843,30 @@ export class ProjectsComponent implements OnInit {
     return dateObj < new Date();
   }
 
-  editProject(project: Project, event: Event) {
+  deleteProject(project: any, event: Event) { // Usamos 'any' para evitar problemas con _id/projectId
     event.preventDefault();
     event.stopPropagation();
-    // Implementar lógica de edición
-    console.log('Edit project:', project);
-  }
-
-  deleteProject(project: Project, event: Event) {
-    event.preventDefault();
-    event.stopPropagation();
-    // Implementar lógica de eliminación
+    
     if (confirm(`Are you sure you want to delete "${project.name}"?`)) {
-      console.log('Delete project:', project);
-      // Aquí harías la llamada HTTP para eliminar
+      
+      // Usamos la propiedad _id que nuestro backend ya transforma para el frontend
+      const projectId = project._id; 
+
+      // 1. Llamamos al servicio HTTP para que envíe la petición DELETE al backend
+      this.http.delete(`${environment.apiUrl}/projects/${projectId}`)
+        .subscribe({
+          next: () => {
+            // 2. Si el backend responde OK, actualizamos la lista VISUALMENTE
+            // Filtramos la lista para quitar el proyecto que acabamos de borrar
+            this.projects = this.projects.filter(p => p._id !== projectId);
+            this.filteredProjects = this.filteredProjects.filter(p => p._id !== projectId);
+            console.log('Proyecto eliminado exitosamente.');
+          },
+          error: (err) => {
+            console.error('Error al eliminar el proyecto:', err);
+            // Aquí podrías mostrar una notificación de error al usuario
+          }
+        });
     }
   }
 }
