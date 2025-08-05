@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.project-management-app.com/api'
+  apiUrl: 'https://api-cloudproject2b.ddns.net/api'
 };
