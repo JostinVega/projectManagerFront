@@ -1,24 +1,27 @@
-import { User } from './user.model';
-import { Task } from './task.model';
-import { Project } from './project.model';
+// src/app/models/notification.model.ts
+
+export type NotificationType =
+  'task_assigned' |
+  'task_updated' |
+  'task_completed' |
+  'project_invitation' |
+  'project_updated' |
+  'default' | // Un tipo genérico si no se especifica
+  'info' |
+  'warning' |
+  'error' |
+  string; // Para permitir cualquier string si hay tipos dinámicos
 
 export interface Notification {
-  id: string;
-  type: NotificationType;
+  id: string; // Mapeado desde notificationId del backend por toPublicNotification
+  userId: string;
   message: string;
-  isRead: boolean;
-  user: User | string;
-  relatedTask?: Task | string;
-  relatedProject?: Project | string;
-  createdAt: Date;
-}
-
-export enum NotificationType {
-  TASK_ASSIGNED = 'task_assigned',
-  TASK_UPDATED = 'task_updated',
-  TASK_COMPLETED = 'task_completed',
-  PROJECT_INVITATION = 'project_invitation',
-  PROJECT_UPDATED = 'project_updated'
+  type: NotificationType;
+  read: boolean; // <-- CAMBIADO DE 'isRead' A 'read'
+  createdAt: string;
+  updatedAt: string; // Asumiendo que updatedAt también existe en el backend
+  link?: string; // Opcional, si la notificación debe redirigir
+  relatedEntityId?: string; // Opcional, para asociar a una entidad (ej. tarea, proyecto)
 }
 
 export interface MarkNotificationReadDto {
